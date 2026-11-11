@@ -1,0 +1,142 @@
+{
+  "checked_at": "2026-11-11T09:50:34.876430+08:00",
+  "scope": "local_static_export_only",
+  "output_directory": "frontend/out",
+  "file_count": 108,
+  "total_bytes": 2803532,
+  "largest_file_bytes": 238620,
+  "manifest_sha256": "e975ca5d64479fec56dd521dae9b7dcfc93788edd541c2ede159e7ec984aab6f",
+  "routes": [
+    "/zh/",
+    "/zh/workspace/",
+    "/zh/lab/",
+    "/zh/training/",
+    "/zh/experiments/",
+    "/zh/docs/",
+    "/zh/docs/factors/",
+    "/zh/docs/rules/"
+  ],
+  "sitemap_urls": [
+    "https://example.com/zh/",
+    "https://example.com/zh/docs/",
+    "https://example.com/zh/docs/factors/",
+    "https://example.com/zh/docs/rules/",
+    "https://example.com/zh/experiments/",
+    "https://example.com/zh/lab/",
+    "https://example.com/zh/training/",
+    "https://example.com/zh/workspace/"
+  ],
+  "pagefind_indexed_pages": 8,
+  "pagefind_metadata_files": 1,
+  "license_included": true,
+  "forbidden_path_check_passed": true,
+  "asset_http_checks": [
+    {
+      "path": "/_next/static/chunks/02cjzmmtof-wo.css",
+      "status": 200,
+      "mime": "text/css; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/04_lqc-51w2bl.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/0cz1d0mv5g_q7.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/0gm9-8m2_9cn6.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/0ktcshjze9ec0.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/17enybsn4kp_l.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/223x28w40ybzl.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/2thmjm1mx07lo.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/2y7xuagqupc54.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/33xtvz6-qaz31.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/35124g4sr6kqs.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/37jbs6w31kzkc.css",
+      "status": 200,
+      "mime": "text/css; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/3pzp_ufyx9ldz.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/turbopack-3wkr1aycqirf-.js",
+      "status": 200,
+      "mime": "text/javascript; charset=utf-8",
+      "passed": true
+    }
+  ],
+  "missing_trailing_slash": {
+    "status": 308,
+    "location": "/zh/docs/factors/"
+  },
+  "browser_verified": [
+    "Root / opens /zh/",
+    "Root query and hash preserved",
+    "Navigation help link",
+    "Chinese search 量价 returns results",
+    "Search result opens /zh/docs/factors/",
+    "Deep page reload",
+    "Unknown language displays Chinese 404",
+    "No warn/error entries observed in browser logs"
+  ],
+  "browser_screenshot": "static-search-local.jpg",
+  "not_verified": [
+    "Qoder Sites upload and hosting",
+    "Real domain metadata and sitemap (example.com placeholder)",
+    "Public anonymous HTTPS",
+    "External FastAPI API and CORS",
+    "Persistence and visitors isolation",
+    "Clean dependency installation"
+  ]
+}

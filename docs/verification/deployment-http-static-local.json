@@ -1,0 +1,98 @@
+{
+  "schema_version": "deployment-http-smoke-v1",
+  "checked_at": "2026-11-11T01:50:35.938965+00:00",
+  "scope": "http_smoke_only",
+  "frontend_origin": "http://127.0.0.1:7000",
+  "frontend_mode": "static_export",
+  "api_origin": null,
+  "passed": true,
+  "checks": [
+    {
+      "check": "root_static_entry",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/workspace",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/lab",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/training",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/experiments",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/docs",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/docs/factors",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "page:/zh/docs/rules",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "not_found:/en/training",
+      "passed": true,
+      "status": 404
+    },
+    {
+      "check": "not_found:/zh/__quantflow_missing_page__",
+      "passed": true,
+      "status": 404
+    },
+    {
+      "check": "favicon",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "pagefind_js",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "pagefind_index",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "pagefind_metadata",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "pagefind_wasm",
+      "passed": true,
+      "status": 200
+    }
+  ],
+  "not_verified": [
+    "Browser execution of the static root entry redirect",
+    "Browser JavaScript, interaction and actual Pagefind query results",
+    "Qoder Sites runtime compatibility, public anonymous access and clean installation",
+    "HTTPS certificate configuration beyond this client's default TLS verification",
+    "POST/preflight/session isolation, persistence, market-data rights and trading rules"
+  ]
+}
