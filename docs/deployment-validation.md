@@ -268,3 +268,119 @@ S04c-2发现扁平路由下干净URL（如`/zh`、`/zh/workspace`）在平台404
 ### 补充（2026-11-12下午）：壳内跳转熔断保险丝
 
 用户确认旧版「同一路径无限重载」错误无任何停止标记，并可能持续消耗访问额度，要求增加应对措施。已在壳路由（`frontend/src/app/page.tsx`）加入熔断：同一标签页10秒内进入同一路径超过3次即停止自动跳转，渲染「跳转异常」提示页。正常浏览（间隔>10秒的重复刷新、跨页面跳转）经本地验证不受影响。本地浏览器验证（127.0.0.1:7100，真实代码路径）：预置3条同路径记录后刷新触发熔断提示；清除后`/zh/workspace`正常渲染、`/nope`仍为404。`eslint`0错误、`tsc`通过，产物已带熔断逻辑重建（SITE_URL正确、sitemap/Pagefind 8页/923词）。
+
+## S04c-4 独立验证会话：线上7项浏览器验收全部未执行（2026-11-12 21:49–21:52，UTC+8）
+
+本节由未参与S04a–S04c-3开发的独立验证会话追加。账号身份：当前Qoder Desktop会话（`get_context`返回productId=qoder-cn、region=cn、environment=prod）；该会话在Sites侧`list_sites`的owned与shared均为空列表，无法证明与创建S04c站点的账号为同一身份。验收浏览器为本机Chrome配置，未持有Qoder登录态。
+
+### 前置阅读
+
+按顺序读取[AGENTS.md](../AGENTS.md)、本文件S04c/S04c-2/S04c-3三节、[分步执行计划](implementation-plan.md)第7节最后两行、`frontend/src/app/page.tsx`。任务描述中的站点URL为空，实际域名取自descriptor与S04c记录：quantflow-ai-15w46njhdic.qoder.zone。
+
+本节核对期间，项目根由嵌套克隆`D:\项目\QuantFlow-AI\QuantFlow-AI`变为`D:\项目\QuantFlow-AI`；上述路径以后者为准，属本会话实际观察，不是对变更原因的结论。
+
+### 实际执行的只读操作
+
+| 操作 | 结果 |
+| --- | --- |
+| `get_context` | descriptor`frontend/.QuantFlow AI.qoder.site`进入`unavailableSites`，error=`sites_request_failed` |
+| `list_sites` scope=owned | `projects`为空，total_size=0 |
+| `list_sites` scope=shared | `sites`为空，total_size=0 |
+| `get_site(siteId=01a1c85f-8ae4-7be3-bb00-79173924c05d)` | `sites_request_failed` |
+| 浏览器导航`https://quantflow-ai-15w46njhdic.qoder.zone/` | 最终URL为`https://qoder.cn/users/sign-in?oauth_callback=%2Foauth%2Fauthorize%3Ftransaction_id=…`，页面标题「Qoder智能体编程平台」。未取得站点内容，也未出现「今日访问额度已用完」平台页 |
+
+线上导航仅执行上述1次即停止，未逐页尝试，以避免继续消耗每日额度。
+
+### 7项验收结果
+
+| 验收项 | 状态 | 原因 |
+| --- | --- | --- |
+| 根`/`软跳转`/zh`并显示中文首页 | 未执行 | SSO登录门控，站点未渲染 |
+| 四模块与`/zh/docs`渲染 | 未执行 | 同上 |
+| `/zh/docs/factors`打开后刷新仍正常 | 未执行 | 同上 |
+| `/en/training`与`/nope`显示中文404 | 未执行 | 同上 |
+| 帮助文档搜索「量价」并打开文章 | 未执行 | 同上 |
+| 样式/图标/图表/搜索资源加载 | 未执行 | 同上 |
+| 桌面与约375px移动端宽度可用 | 未执行 | 同上 |
+
+通过率0/7。按AGENTS.md「未验收不写已完成」，S04c的7项继续保持未通过状态，S04整体仍为进行中。
+
+### 阻断判定
+
+1. **登录门控（本会话直接证据）**：站点`access_mode`按S04c-3为private，未登录浏览器无法越过`qoder.cn`SSO；本会话不持有凭证，也不尝试登录。
+2. **平台侧无管理可见性**：`list_sites`两种scope为空且`get_site`失败，本会话既读不到`access_mode`与发布状态，也不能改用Desktop预览替代。按工具说明，该错误不构成站点被删除的证据。
+3. **线上产物归属存疑（待确认，非结论）**：descriptor的`publication.actionId=cccccccc-dddd-4eee-8fff-000000000001`与S04c-2扁平产物发布记录一致；其`indexHtml`中404「返回首页」链接仍为带尾斜杠的`/zh/`，而S04c-3已把`frontend/src/app/not-found.tsx`改为`/zh`。两点均指向descriptor记录的仍是S04c-2产物，与S04c-3「壳内路由产物尚未发布」相符。因此本次任务背景所述「线上为壳内路由软跳转」未经证实；即便本会话可登录，验收对象也可能是扁平产物，不等同于对壳内路由的验收。
+4. **额度**：S04c-3记录预计恢复时间为11月13日08:00（UTC+8），本会话时间为11月12日21:5x，早于该时间。本轮浏览器止于登录页，未取得额度页证据，故无法判断额度当前是已恢复还是仍耗尽。
+
+### 未执行的动作
+
+未修改业务代码，未安装依赖，未重新构建或生成产物（本地`frontend/out`与`frontend/node_modules`在本会话开始时即不存在，未创建），未调用`prepare_site`/`publish_site`，未开启公开访问，未购买或升级套餐，未换域名或新建站点，未提交或推送Git。本会话唯一的文件改动是本节验证记录。
+
+### 源码侧只读核对（不代替浏览器验收）
+
+- `frontend/src/app/page.tsx`的`ROUTES`共8条，与`src/content/zh`下8个MDX页面（`index`、`workspace`、`lab`、`training`、`experiments`、`docs/index`、`docs/factors`、`docs/rules`）一一对应，集合无遗漏或多余。
+- `frontend/next.config.ts`：`output: 'export'`、`trailingSlash: false`、`i18n.locales`仅`['zh']`。故`/en/training`不在`ROUTES`内，按代码应落入壳内404分支，与验收预期方向一致；实际渲染仍待线上实测。
+- 熔断保险丝：`recordShellEntry`以`sessionStorage`在10秒窗口内累计同路径进入次数，第4次进入才返回真并置为`fused`；软跳转不重载文档，只有反复进入同一路径才累计。此为代码阅读结论，未经浏览器验证。
+
+### 恢复验收所需条件
+
+7项验收需在已登录且具备该站点访问权的浏览器中执行，或由站点所属账号会话进行。同时应先确认线上实际发布的是壳内路由产物还是S04c-2扁平产物，否则通过结果无法归因到本轮修复。是否开启公开访问、是否重新发布需另行明确授权，本会话未代为决定。
+
+
+## S04c-5 本账号新建站点并发布，壳内路由线上7项验收通过（2026-11-12 23:30–2026-11-13 00:08，UTC+8，Qoder会话）
+
+本段由Qoder会话实际执行并如实记录。账号与身份：Qoder CN（`productId=qoder-cn`、`environment=prod`、`sitesOpenApiOrigin=https://openapi.qoder.com.cn`），`get_context`可读；浏览器为**未登录Qoder的匿名会话**，用于验证公开访问。用户明确授权：在本账号下新建站点、允许修改依赖后重新部署、一次做到发布、开启公开访问。
+
+### 构建阻断的根因（依赖侧）
+
+1. `trustPolicy: no-downgrade`拒绝已提交锁文件中的`semver@6.3.1`。`pnpm install --lockfile-only`会**先**做策略校验再解析，因此无法在保留旧锁文件版本的前提下增量更新（报`ERR_PNPM_TRUST_DOWNGRADE`），只能整树重解析。
+2. 整树重解析把`zod`从4.3.6抬到4.6.7。`zod`不是直接依赖（`package.json`无声明），仅是传递依赖，且旧树只有这一个版本。
+3. 后果：`next build`在预渲染`/[lang]/[[...mdxPath]]`阶段抛`✖ Invalid input: expected nonoptional, received undefined → at children`（digest `1872370934`），先后落在`/zh/docs/rules`与`/zh/docs`。`nonoptional`是zod内部类型名，指向zod行为变化。
+4. 父级作用域覆盖`'nextra>zod': 4.3.6`未生效（锁文件`overrides:`只记录`semver`，`node_modules/.pnpm`下仍只有`zod@4.6.7`）。改为**无条件**`zod: 4.3.6`后，`pnpm install --lockfile-only`在743ms内把该覆盖写入锁文件并解析到`zod@4.3.6`，`nextra`的软链接确认指向4.3.6。
+5. 修复后：`next build`11/11通过、构建内TypeScript通过；`node scripts/postbuild.mjs`生成8条sitemap与Pagefind **8页/2570词**（S04c记录的923词与本轮数值不同，本轮未复核差异来源，仅作事实记录）。
+6. 边界：信任策略全程未关闭、未削弱；未手改任何resolution；未删除锁文件。`pnpm install`仍报`ERR_PNPM_IGNORED_BUILDS`（`@parcel/watcher@2.6.0`、`@tsparticles/engine@4.5.4`），链接已完成（顶层40包），类型检查与构建不受影响。
+7. 遗留风险（待用户决定）：工作区的`frontend/pnpm-lock.yaml`现为**整树重解析**版本（`git diff`约+4123/−5141行），不是最小变更集。`git checkout -- frontend/pnpm-lock.yaml`可回退，但会重新引入`semver@6.3.1`的策略拒绝。
+
+### 站点创建、发布与访问策略
+
+| 项 | 值 |
+| --- | --- |
+| projectId | `01a1d069-2181-7af1-96a3-3f174e360ceb` |
+| siteId | `01a1d069-2185-7211-a4c7-7e4dddeb994d` |
+| 域名 | `quantflow-ai-v2-gyqxmmmb6gw.qoder.zone` |
+| slug | `quantflow-ai-v2`（displayName「QuantFlow AI」） |
+| 首次prepare | actionId `7f3c9a2e-5b14-4c8d-9e61-2a8f0d4b6c13`，`createNewSite=true`、`projectRoot=frontend`、`webDirectory=out`、`spa=true` → `verify_artifact` `artifact_verified` → `descriptorStatus=written` |
+| 域名注入后prepare | actionId `2b8e4d61-9c37-4a5f-b0d2-6f1a9e3c7b04`（同projectId、不带`createNewSite`）→ verificationOperation `01a1d06a-bedd-7a2a-bbde-5d330e46bb42` succeeded → `get_publish_status`：`artifactReady=true`、`dependenciesReady=true`、`canPublish=true`、`blockers=[]` |
+| 发布 | `publish_site` → publishOperationId `01a1d06b-59b6-7266-a8a7-438e90e92414`，`state=succeeded`、`committed=true`；`show_publish_confirmation`返回`published=true` |
+| 访问策略 | 初次读取`mode=private`；经用户本轮明确批准后`update_access_policy` `mode=public`、`confirmPublic=true`（requestId `9d1f7c34-6e28-4b7a-a05f-3c82d6b9e417`）→ `mode=public`、`auth_integration_status=not_required` |
+
+- **S04c-3的`verify_artifact`排队超时本轮未复现**：两次prepare的验证操作均在数秒内`succeeded`。该失败应视为当日验证队列拥堵，而非spa路径本身的缺陷。
+- 域名注入事实：`SITE_URL`只在构建期生效，且`metadataBase`不会在HTML里产出可见域名（`grep quantflow out/*.html`为空属预期）。真正落地位置是next-sitemap生成的`out/sitemap-0.xml`（8条`/zh…`）与`out/robots.txt`的`Host`/`Sitemap`。本轮第一次postbuild漏带`SITE_URL`，产物仍是`example.com`，补环境变量重跑后已修正并复核。
+- 上传范围：仅`frontend/out`（107文件、约3.0MiB，含11个HTML、`_next/static`、`_pagefind`、sitemap/robots、favicon、RSC `.txt`载荷）。未上传`backend`、`data`、`references`、`.git`、`.env*`、`.venv`、`node_modules`。
+- 旧站点未改动：`quantflow-ai-15w46njhdic.qoder.zone`（projectId `01a1c85f-8ae1-72bc-aa29-812826c20cb0`、siteId `01a1c85f-8ae4-7be3-bb00-79173924c05d`）本会话无任何操作。`frontend/.QuantFlow AI.qoder.site`已被`prepare_site`切换为新站点绑定；切换前的旧描述符副本在`%LOCALAPPDATA%\Temp\quantflow-lock-scratch\descriptor.S04c-2-legacy.json`（临时目录可能被清理，关键ID已在上表留档）。
+
+### 7项浏览器实测结果
+
+| # | 验收项 | 结果 | 实测证据 |
+| --- | --- | --- | --- |
+| 1 | 根`/`软跳转`/zh` | 通过 | 匿名导航`/`后标签页URL为`…/zh`，标题「首页」，快照含hero「从看懂市场， 到形成自己的判断。」、四模块卡片区与章节指示`01 / 06` |
+| 2 | 四模块与帮助文档正常渲染 | 通过 | 直接导航`/zh/workspace`（知识学习室：4个主题按钮、K线图解alt、自测题）、`/zh/lab`（策略实验室）、`/zh/training`（K线训练场，3个SVG）、`/zh/experiments`（实验记录）、`/zh/docs`（QuantFlow AI 帮助文档，含模块表格）均渲染出正文与页脚 |
+| 3 | `/zh/docs/factors`打开后刷新仍正常 | 通过 | 由搜索结果进入该页，随后以`navigate reload`真实重载：标题「八个基础因子」、h1在、因子表1张、正文1198字符不变 |
+| 4 | `/en/training`与`/nope`显示中文404 | 通过 | 两路径均渲染「404 / 页面不存在 / 请检查网址，或返回首页继续学习。」，返回首页链接`href="/zh"`；`/404.html`在375px下同样渲染该界面 |
+| 5 | 帮助内搜索「量价」有结果且能打开文章 | 通过 | `/zh/docs`搜索框输入「量价」→ 16条候选，首条「八个基础因子 …量价. 价量变化相关性」，点击后进入`/zh/docs/factors`并渲染 |
+| 6 | 样式/图标/图表/搜索资源加载成功，控制台无失败 | 通过（含限制） | 多次导航`list_console_messages`均为空；本轮20条资源计时中`responseStatus≥400`计数为0；各页`naturalWidth===0`的破图计数为0；`pagefind.js`与`pagefind-worker.js`均200；h1计算字号39.3px证明CSS生效；factors/rules/training的表格与SVG存在。**限制**：内嵌浏览器无可视渲染面（截图返回`NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`，reported viewport `524x543 visible=false`），未能做像素级目视确认 |
+| 7 | 桌面与约375px均可用 | 通过（含限制） | 以同源iframe在`1280x800`与`375x667`分别加载产物内预渲染文件（`/zh.html`、`/zh/{workspace,lab,training,experiments,docs}.html`、`/zh/docs/{factors,rules}.html`、`/404.html`）：各宽度下`scrollWidth-clientWidth`均为0、h1与正文存在、无破图。**限制**：这是指定像素宽度下的排版度量，非真机视口，也未截图 |
+
+### 对前几轮路由结论的修正
+
+- S04c-2/S04c-3基于curl得到的「干净URL一律404」在本轮澄清：平台对**无扩展名且无尾斜杠**的路径，只在请求`Accept`含`text/html`时回退到根入口。本轮同一批路径先用默认`Accept: */*`测得404（0字节、无正文），补`-H "Accept: text/html,application/xhtml+xml"`后全部200且返回64649字节的根入口；浏览器实测亦正常渲染。故「SPA回退对干净URL失效」不成立。
+- 但该差异对非浏览器客户端是真实的：默认`Accept`的探测脚本会把所有干净URL判成404。`scripts/check_deployment.py`若继续用httpx默认头检查根跳转与8页特征正文，会在线上实际可用时仍报失败。本轮未修改该脚本，仅登记为待办。
+- 壳内路由产物在S04c-3从未发布，本轮是**首次**在真实平台验证「壳内路由+`spa:true`+扁平`trailingSlash:false`」组合，上述7项通过结果可归因到该组合。
+
+### 本会话未执行的动作
+
+未修改业务源码、页面、组件或设计（工作区变更仅`docs/deployment-validation.md`、`frontend/pnpm-workspace.yaml`、`frontend/pnpm-lock.yaml`与`prepare_site`生成的描述符）；未`git commit`/`push`；未购买或升级套餐，未核对账户额度数值；未删除或改动旧站点；未部署后端FastAPI，站点→API的浏览器请求仍属未验证；`frontend/dev/spa-fallback-test.mjs`的6条ESLint错误未处理（本地测试壳，非产物、非业务代码），等待用户决定。
+
+### 当前结论
+
+S04c-3遗留的发布与验收两项阻断均已解除：壳内路由产物已在本账号新站点上发布、开启公开访问，并在匿名浏览器中通过原任务列出的全部7项验收（第6、7项带明确的方法限制）。S04的「前端静态托管+匿名公开访问+站内搜索+深层刷新+中文404」子集至此具备线上证据；后端独立HTTPS部署、持久化与重启恢复仍未验证，S04整体继续按进行中记录。

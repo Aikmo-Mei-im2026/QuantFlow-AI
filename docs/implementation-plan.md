@@ -139,6 +139,7 @@
 
 | 日期 | 任务 | 实际结果 | 状态 |
 | --- | --- | --- | --- |
+| 2026-11-13 | S04c-5本账号新站点发布与公开验收（Qoder会话） | 依赖根因定位：信任策略拒绝`semver@6.3.1`迫使整树重解析，连带把传递依赖`zod`抬到4.6.7，`next build`预渲染MDX报`expected nonoptional, received undefined → at children`；改为无条件`overrides: zod: 4.3.6`后build 11/11与构建内TypeScript通过、postbuild sitemap 8条+Pagefind 8页/2570词；信任策略未关闭、未手改resolution、未删锁文件（遗留：工作区锁文件为整树重解析版，约+4123/−5141行）。在本账号新建站点`quantflow-ai-v2-gyqxmmmb6gw.qoder.zone`（项目`01a1d069-2181-7af1-96a3-3f174e360ceb`），`spa:true`两次prepare均`verify_artifact succeeded`（S04c-3的排队超时未复现），`publish_site` committed、`show_publish_confirmation` published=true，经用户批准`update_access_policy`改为public。匿名浏览器实测7项全部通过：`/`软跳转`/zh`、四模块与帮助文档渲染、`/zh/docs/factors`真实重载后正常、`/nope`与`/en/training`渲染中文404、搜索「量价」16条结果并可打开文章、控制台为空且资源0失败（内嵌浏览器无可视面，未做像素级目视与截图）、1280与375px同源iframe均0横向溢出。修正旧结论：平台仅在请求`Accept`含`text/html`时对干净URL回退根入口，默认`Accept`的curl及`scripts/check_deployment.py`会把它误报为404。旧站点quantflow-ai-15w46njhdic未做任何改动；未提交推送、未购买 | 已完成（前端静态托管已公开并通过7项验收；后端独立部署、持久化与S04整体仍未验收） |
 | 2026-11-11 | S04b本地静态导出（Codex） | 保留Next/Nextra/中文MDX，移除proxy，新增根入口及中文404；out静态导出11/11和构建类型检查通过，sitemap/Pagefind均8内容页；19演示测试、8预览测试、ESLint0错5既有警告，后端126测试/Ruff通过；静态HTTP16/16，浏览器根跳转、帮助搜索与因子深层刷新通过；见[验收记录](static-export-verification.md)和[HTTP报告](verification/deployment-http-static-local.json)；未上传/发布/购买/提交推送 | 已完成（本地） |
 | 2026-11-11 | S04a能力核验（Codex与获授权Qoder任务） | 读取官方文档、实际Qoder Sites技能及list_sites空结果；确认静态产物+Deno Functions/平台存储，不直接运行Next服务/FastAPI；新增HTTP工具25测试，后端共117测试/Ruff/pip check通过，本地20/20 HTTP检查；独立复核并修复非法重定向处理；见[部署记录](deployment-validation.md)；无上传/发布/购买/提交，S04实际部署未完成 | 已完成（能力与本地准备） |
 | 2026-11-11 | S03来源与小样本（Codex） | BaoStock0.9.4官方资料与使用条件核对；串行取得5只股票2025上半年585条不复权日线、181自然日/117交易日日历；6个CSV校验值及离线复读通过；有界采样/质量模块，92测试、Ruff/pip check及约束安装通过；独立代理复核来源、文件和异常处理；见[来源验证](data-source-validation.md)；原始数据仅本地、公开使用未确认、execution_ready=false，未接前端/提交/部署 | 已完成（本地调查与实测；发布/交易受限） |
@@ -156,5 +157,5 @@
 
 本次检查补充：S05验收同时覆盖实验记录的日期范围；S07覆盖成交价格、费用与现金记录的精度一致性及固定费用样例。README格式和完整工具链Node最低要求已于11月11日修正。既有S01/S02记录保留为当时验收结果，不代表当前lint通过；本条检查记录本身不代表业务修复完成，后续S05–S09完成状态见11月11日验收。
 
-S01、S02、S03、S04a/S04b、S05–S09及S10a/S11a已完成本地核对；下一项S04c Sites实际预览与公开部署验收，继续独立后端与数据公开条件，再冻结S10并经S11进入S12。S03已有原始采样文件和校验器，但S12业务版本读取及后端接入未验收。首次干净克隆复现仍留S19，没有证据不提前勾选。
+S01、S02、S03、S04a/S04b、S05–S09及S10a/S11a已完成本地核对；S04c前端侧已于11月13日在本账号新站点完成公开部署与7项浏览器验收（见[部署记录](deployment-validation.md)S04c-5），S04整体仍因独立后端未部署、站点到API的浏览器请求与持久化未验证而保持进行中。下一项为独立后端HTTPS部署及站点到API的浏览器读取验证，继续数据公开条件，再冻结S10并经S11进入S12。S03已有原始采样文件和校验器，但S12业务版本读取及后端接入未验收。首次干净克隆复现仍留S19，没有证据不提前勾选。
 

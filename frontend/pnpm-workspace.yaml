@@ -2,6 +2,15 @@ minimumReleaseAgeExcludePrune: true
 trustPolicy: no-downgrade
 shellEmulator: true
 
+# @babel/*、eslint-plugin-react、node-exports-info 仍声明 semver@^6.3.1；
+# 该 6.x 版本被 trustPolicy: no-downgrade 判为高危降级，6.x 已无更新补丁版，故统一到锁文件既有的 7.x。
+overrides:
+  semver: ^7.8.5
+  # zod 仅为传递依赖。解析到 4.6.7 时 next build 在预渲染 /[lang]/[[...mdxPath]] 阶段抛
+  # 「Invalid input: expected nonoptional, received undefined → at children」；4.3.6 是
+  # 既有可构建版本，故固定。
+  zod: 4.3.6
+
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@tsparticles/engine'
