@@ -50,6 +50,7 @@ export interface DemoFill {
 export interface DemoAccount {
   dayIndex: number
   cashCents: number
+  initialCashCents: number
   positions: DemoPosition[]
   orders: DemoOrder[]
   fills: DemoFill[]
@@ -67,7 +68,8 @@ export interface DemoQuote {
   totalCents: number
 }
 
-const INITIAL_CASH_CENTS = 10_000_000
+/** Default starting capital of a demo account; a local practice profile may choose another amount. */
+export const DEMO_INITIAL_CASH_CENTS = 10_000_000
 const TEN_THOUSAND = BigInt(10_000)
 const MAX_INTEGER = BigInt(Number.MAX_SAFE_INTEGER)
 
@@ -149,8 +151,8 @@ export function quoteDemoOrder(referencePrice: number, qty: number, side: DemoSi
   return { priceCents: values[0]!, amountCents: values[1]!, feeCents: values[2]!, totalCents: values[3]! }
 }
 
-export function createDemoAccount(dayIndex = 0): DemoAccount {
-  return { dayIndex, cashCents: INITIAL_CASH_CENTS, positions: [], orders: [], fills: [] }
+export function createDemoAccount(dayIndex = 0, initialCashCents = DEMO_INITIAL_CASH_CENTS): DemoAccount {
+  return { dayIndex, cashCents: initialCashCents, initialCashCents, positions: [], orders: [], fills: [] }
 }
 
 export function submitDemoOrder(
@@ -303,7 +305,7 @@ export function advanceDemoDay(state: DemoAccount, market: DemoMarket): DemoResu
     order.reason = '按下一样例日开盘价及5bp滑点成交；佣金0.03%，最低5元'
     fills.push({ orderId: order.id, code: order.code, side: order.side, qty: order.qty, date, ...quote, status: 'filled', reason: order.reason })
   }
-  return { state: { dayIndex: nextIndex, cashCents, positions: positions.filter(position => position.qty > 0), orders, fills: [...fills, ...state.fills] }, error: null }
+  return { state: { ...state, dayIndex: nextIndex, cashCents, positions: positions.filter(position => position.qty > 0), orders, fills: [...fills, ...state.fills] }, error: null }
 }
 
 export function valueDemoAccount(state: DemoAccount, market: DemoMarket): {
@@ -330,4 +332,74 @@ export function valueDemoAccount(state: DemoAccount, market: DemoMarket): {
     return { holdingsValueCents: null, equityCents: null, error: '估值超出安全范围' }
   }
   return { holdingsValueCents, equityCents, error: null }
+}
+
+export interface DemoEquityPoint {
+  date: string
+  equityCents: number | null
+  reason: string | null
+}
+
+/**
+ * Rebuilds the account value for every replayed day from the fills already booked, so the curve can
+ * never expose a bar later than state.dayIndex. Rejected orders are skipped; a missing close yields a
+ * null point instead of borrowing another symbol's price.
+ */
+export function replayDemoEquity(state: DemoAccount, market: DemoMarket): {
+  points: DemoEquityPoint[]
+  error: string | null
+} {
+  const invalid = marketError(state, market)
+  if (invalid) {
+    return { points: [], error: invalid }
+  }
+  const booked = new Map<string, DemoFill[]>()
+  for (const fill of state.fills) {
+    if (fill.status !== 'filled') {
+      continue
+    }
+    const day = booked.get(fill.date)
+    if (day) {
+      day.push(fill)
+    }
+    else {
+      booked.set(fill.date, [fill])
+    }
+  }
+  let cash = BigInt(state.initialCashCents)
+  const shares = new Map<string, bigint>()
+  const points: DemoEquityPoint[] = []
+  for (let index = 0; index <= state.dayIndex; index++) {
+    const date = market.dates[index]
+    for (const fill of booked.get(date) ?? []) {
+      if (fill.side === 'buy') {
+        cash -= BigInt(fill.amountCents) + BigInt(fill.feeCents)
+        shares.set(fill.code, (shares.get(fill.code) ?? BigInt(0)) + BigInt(fill.qty))
+      }
+      else {
+        cash += BigInt(fill.amountCents) - BigInt(fill.feeCents)
+        shares.set(fill.code, (shares.get(fill.code) ?? BigInt(0)) - BigInt(fill.qty))
+      }
+    }
+    let holdings = BigInt(0)
+    let reason: string | null = null
+    for (const [code, qty] of shares) {
+      if (qty === BigInt(0)) {
+        continue
+      }
+      const candle = getDemoCandle(market, code, date)
+      const price = candle && priceInCents(candle.close)
+      if (!price) {
+        reason = `${code}当日收盘行情缺失或无效，该日无法估值`
+        break
+      }
+      holdings += BigInt(price) * qty
+    }
+    const equityCents = reason === null ? safeNumber(holdings + cash) : null
+    if (reason === null && equityCents === null) {
+      reason = '估值超出安全范围'
+    }
+    points.push({ date, equityCents: reason === null ? equityCents : null, reason })
+  }
+  return { points, error: null }
 }

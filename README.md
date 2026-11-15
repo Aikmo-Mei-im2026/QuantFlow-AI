@@ -16,6 +16,8 @@
 
 训练场已按 [KLinePlayground](https://github.com/fat7/KLinePlayground) 的交互结构改版，提供账户面板、K线与成交量、MA5/10/20、买卖标记、缩放与回放控制。参见[设计参考](docs/kline-design-reference.md)和[本地验收](docs/frontend-demo-verification.md)。
 
+2026-11-15 更新：训练场两种模式共用数据源、起始日期和初始资金设置，指定模式选股票，盲盒模式随机抽股票。可切换日线、周线及 MACD/KDJ/RSI/BOLL 副图，真实日线可由 AKShare 在本地采集后导入。命令、快照和站点更新步骤见 [Qoder Sites 训练部署说明](docs/qoder-training.md)。
+
 ## 在 Windows 启动前端
 
 先安装 Node.js 24.x 与 pnpm，并在 PowerShell 检查版本。项目按完整工具链声明 Node 24.x，本机实测为 v24.16.0；Next.js 自身的较低要求不覆盖 ESLint 等开发依赖。现有依赖记录由 pnpm 12.14.0 安装，当前终端入口为 11.25.0；团队统一版本并完成干净安装前，不将这两者视为已验证兼容。package.json 目前只声明 pnpm >=9，没有锁定具体版本。
@@ -54,7 +56,7 @@ pnpm dev
 | 首页 | http://localhost:8000/zh | 背景铺满、滚轮逐屏切换的介绍页，说明四模块与帮助入口 |
 | 知识学习室 | http://localhost:8000/zh/workspace | K线、量价、ETF、风险的图文入门内容 |
 | 策略实验室 | http://localhost:8000/zh/lab | 搜索预置股票、候选解释、演示净值和交易明细 |
-| K 线训练场 | http://localhost:8000/zh/training | 合成行情与内存练习账户 |
+| K 线训练场 | http://localhost:8000/zh/training | 合成行情、导入历史日线和内存练习账户 |
 | 实验记录 | http://localhost:8000/zh/experiments | 固定样例记录，尚未接真实任务 |
 | 帮助文档 | http://localhost:8000/zh/docs | 因子与目标交易规则说明 |
 

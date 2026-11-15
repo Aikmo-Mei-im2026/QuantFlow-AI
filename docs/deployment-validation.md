@@ -384,3 +384,36 @@ S04c-2发现扁平路由下干净URL（如`/zh`、`/zh/workspace`）在平台404
 ### 当前结论
 
 S04c-3遗留的发布与验收两项阻断均已解除：壳内路由产物已在本账号新站点上发布、开启公开访问，并在匿名浏览器中通过原任务列出的全部7项验收（第6、7项带明确的方法限制）。S04的「前端静态托管+匿名公开访问+站内搜索+深层刷新+中文404」子集至此具备线上证据；后端独立HTTPS部署、持久化与重启恢复仍未验证，S04整体继续按进行中记录。
+
+## S04c-6 11-14三个增量的发布尝试：构建成功、上传被月度配额阻断（2026-11-14 20:55–21:10，UTC+8，Qoder会话）
+
+用户经选项明确授权「现在发布」：用真实站点域名重建静态产物，`prepare_site`+`publish_site`一次完成，发布后以匿名浏览器核对登录页、顶栏chip与训练场期初资金，并知悉会消耗当日站点访问额度。
+
+### 构建（成功）
+
+1. 按AGENTS.md「先停同目录开发服务」停止7000本地预览后再构建。
+2. `SITE_URL=https://quantflow-ai-v2-gyqxmmmb6gw.qoder.zone node ./node_modules/next/dist/bin/next build`退出码0；同域名再跑`node scripts/postbuild.mjs`成功。
+3. 产物核对：12个HTML（`404`、`_not-found`、`index`、`zh`、`zh/docs`、`zh/docs/factors`、`zh/docs/rules`、`zh/experiments`、`zh/lab`、`zh/login`、`zh/training`、`zh/workspace`）；`out/sitemap-0.xml`为9条`https://quantflow-ai-v2-gyqxmmmb6gw.qoder.zone/zh…`；`out/robots.txt`的`Host`与`Sitemap`同域名；`example.com`在`*.html`/`*.xml`中检索为空；Pagefind收录**9页/2641词/1语言**；`out/`共**114文件、3.2MiB**（S04c-5为107文件/3.0MiB）。
+4. `out/zh/login.html`静态可见文本仅「进入练习」与「正在读取本机档案…」（服务端快照为undefined，表单与非认证告警在客户端渲染），登录文案确认存在于`_next/static/chunks/18gxd7k5uwrom.js`与`2ppiqjsd7g72s.js`。
+
+### 上传被阻断（未产生任何云端写入）
+
+- `prepare_site`输入：actionId `a7f84954-fb97-44d7-a3f5-09945ff782cb`、`projectRoot=D:\项目\QuantFlow-AI\frontend`、`webDirectory=out`、`projectId=01a1d069-2181-7af1-96a3-3f174e360ceb`、`spa=true`、不带`createNewSite`。失败于`verify_target`步骤，服务端返回「Monthly subpath quota exhausted」（本月子路径配额已用尽）。响应未含`resource`/`used`/`limit`字段，**配额计数口径与重置时间均无证据，不作推断**。
+- 只读复核：`get_publish_status`对同一actionId返回`sites_action_unavailable`，说明未记录任何Deployment、本轮未创建云端资源；`list_sites`仍为1个项目，`hasPublishedContent=true`、`lifecycle=active`、`access_mode=public`、域名未变、项目`updated_at`仍为`2026-11-12T15:40:59Z`。
+- 结论：线上仍是11-13发布内容，11-14三个增量（训练场账户净值曲线、实验记录类型/状态筛选、本机练习档案登录页）**未上线**。
+
+### 按平台限额规则主动停止的动作
+
+未重复提交同一准备（限额不会因重复请求解除）；未调用`publish_site`；未新建站点、未更换域名、未删除站点或任何历史Deployment/子路径以腾挪额度；未改访问策略（仍为public）；未购买或升级套餐；未打开`show_publish_confirmation`（不存在就绪草稿可展示）。
+
+### 未执行
+
+线上匿名浏览器验收（含新增登录页、chip、训练场期初资金三项）：**未执行**，原因是发布未完成；为避免以未变化的旧版本消耗当日站点访问额度，本轮未对线上发起额外请求。
+
+### 本地可看状态
+
+已重启本地预览（`127.0.0.1:7000`，服务`frontend/out`）：`/zh/login.html`返回200、32214字节，与`out/zh/login.html`逐字节一致；`/zh.html`、`/index.html`亦200。本地预览不映射clean URL，访问需带`.html`后缀。
+
+### 恢复发布所需条件
+
+配额阻断解除后，以**同一actionId与完全相同的输入**重跑`prepare_site`（deployment.md恢复规则：准备在记录Deployment之前中断时按原action与原输入继续）；源码未再变化则无需重新构建。随后按`get_publish_status`→`publish_site`→匿名浏览器验收→`show_publish_confirmation`完成交付。

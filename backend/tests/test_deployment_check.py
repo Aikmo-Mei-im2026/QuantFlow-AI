@@ -20,6 +20,7 @@ PAGE_TEXT = {
     "/zh/lab": "策略实验室：搜索样例股票，读懂评分依据。",
     "/zh/training": "K 线训练场 模拟账户 提交委托",
     "/zh/experiments": "实验记录 当前展示：记录格式样例",
+    "/zh/login": "进入练习 正在读取本机档案…",
     "/zh/docs": "QuantFlow AI 帮助文档 四个模块怎么用",
     "/zh/docs/factors": "八个基础因子 ATR 计算",
     "/zh/docs/rules": "交易与费用规则 当前合成演示",
@@ -52,7 +53,7 @@ def good_response(request):
     if path == "/_pagefind/pagefind-entry.json":
         return httpx.Response(200, json={
             "version": "1.5.2",
-            "languages": {"zh": {"hash": "zh_abc123", "wasm": None, "page_count": 8}},
+            "languages": {"zh": {"hash": "zh_abc123", "wasm": None, "page_count": 9}},
         })
     if path == "/_pagefind/pagefind.zh_abc123.pf_meta":
         return httpx.Response(200, content=gzip.compress(b"pagefind_dcdmetadata"))
@@ -93,8 +94,8 @@ def test_happy_path_is_explicitly_limited_and_read_only():
     report = smoke.run_checks(FRONTEND, API, transport=httpx.MockTransport(handler))
     assert report["passed"] is True
     assert report["scope"] == "http_smoke_only"
-    assert len(report["checks"]) == 20
-    assert len(calls) == 19
+    assert len(report["checks"]) == 21
+    assert len(calls) == 20
     assert report["not_verified"]
 
 
@@ -266,7 +267,7 @@ def test_static_export_checks_entry_and_trailing_slash_pages_without_claiming_br
     assert report["passed"] is True
     assert report["frontend_mode"] == "static_export"
     assert report["scope"] == "http_smoke_only"
-    assert len(report["checks"]) == 16
+    assert len(report["checks"]) == 17
     assert {path + "/" for path in PAGE_TEXT} <= set(calls)
     assert not set(PAGE_TEXT) & set(calls)
     assert report["checks"][0] == {

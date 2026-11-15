@@ -16,7 +16,7 @@
     "start": "node scripts/preview-static.mjs",
     "lint": "eslint --fix .",
     "typecheck": "tsc --noEmit",
-    "test:demo": "node --test tests/demo-execution.test.ts tests/demo-research.test.mjs tests/demo-chart.test.mjs"
+    "test:demo": "node --test tests/demo-execution.test.ts tests/demo-profile.test.ts tests/demo-research.test.mjs tests/demo-chart.test.mjs tests/demo-indicators.test.ts tests/demo-training.test.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

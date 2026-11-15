@@ -14,6 +14,7 @@ const ROUTES = new Set([
   '/zh/docs/rules',
   '/zh/experiments',
   '/zh/lab',
+  '/zh/login',
   '/zh/training',
   '/zh/workspace',
 ])

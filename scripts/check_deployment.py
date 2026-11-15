@@ -19,6 +19,8 @@ PAGES = {
     "/zh/lab": ("策略实验室", "搜索样例股票，读懂评分依据"),
     "/zh/training": ("K 线训练场", "模拟账户", "提交委托"),
     "/zh/experiments": ("实验记录", "当前展示：记录格式样例"),
+    # The profile is browser-only, so the exported HTML of this page holds the loading line, never the form.
+    "/zh/login": ("进入练习", "正在读取本机档案"),
     "/zh/docs": ("QuantFlow AI 帮助文档", "四个模块怎么用"),
     "/zh/docs/factors": ("八个基础因子", "ATR 计算"),
     "/zh/docs/rules": ("交易与费用规则", "当前合成演示"),

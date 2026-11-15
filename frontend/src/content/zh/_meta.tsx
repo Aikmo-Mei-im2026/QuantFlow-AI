@@ -33,6 +33,11 @@ export default {
     title: '实验记录',
     theme: businessLayout,
   },
+  login: {
+    type: 'page',
+    title: '个人中心',
+    theme: businessLayout,
+  },
   docs: {
     type: 'page',
     display: 'hidden',

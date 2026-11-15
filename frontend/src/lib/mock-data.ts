@@ -254,23 +254,23 @@ function seededRandom(seed: number) {
 }
 
 // Synthetic weekdays for a demo only; this is not an exchange trading calendar.
-export const mockReplayDates: string[] = (() => {
+export function syntheticReplayDates(start: string, count: number): string[] {
   const dates: string[] = []
-  const day = new Date('2026-08-03T00:00:00Z')
-  while (dates.length < 42) {
+  const day = new Date(`${start}T00:00:00Z`)
+  while (dates.length < count) {
     if (day.getUTCDay() !== 0 && day.getUTCDay() !== 6) {
       dates.push(day.toISOString().slice(0, 10))
     }
     day.setUTCDate(day.getUTCDate() + 1)
   }
   return dates
-})()
+}
 
-export const mockCandlesBySymbol: Record<string, Candle[]> = Object.fromEntries(
-  mockSymbols.map((symbol, index) => {
+export function syntheticCandlesBySymbol(symbols: typeof mockSymbols, dates: string[]): Record<string, Candle[]> {
+  return Object.fromEntries(symbols.map((symbol, index) => {
     const rnd = seededRandom(42 + index * 97)
     let close = symbol.close
-    const candles = mockReplayDates.map(date => {
+    const candles = dates.map(date => {
       const open = close * (1 + (rnd() - 0.5) * 0.012)
       const nextClose = close * (1 + (rnd() - 0.46) * 0.035)
       const candle = {
@@ -285,8 +285,11 @@ export const mockCandlesBySymbol: Record<string, Candle[]> = Object.fromEntries(
       return candle
     })
     return [symbol.code, candles]
-  }),
-)
+  }))
+}
+
+export const mockReplayDates = syntheticReplayDates('2026-08-03', 42)
+export const mockCandlesBySymbol = syntheticCandlesBySymbol(mockSymbols, mockReplayDates)
 
 export const mockCandles: Candle[] = mockCandlesBySymbol[mockSymbols[0].code]
 

@@ -31,6 +31,58 @@ export function EquityChart({
   )
 }
 
+export function AccountEquityChart({
+  points,
+  initialCents,
+  label,
+  height = 180,
+}: {
+  points: { date: string, equityCents: number | null }[]
+  initialCents: number
+  label: string
+  height?: number
+}) {
+  const width = 720
+  const pad = 10
+  const valued = points.map(point => point.equityCents).filter((value): value is number => value !== null)
+  let min = Math.min(...[...valued, initialCents])
+  let max = Math.max(...[...valued, initialCents])
+  if (max - min === 0) {
+    min -= Math.max(1, min * 0.02)
+    max += Math.max(1, max * 0.02)
+  }
+  const range = max - min
+  const step = points.length > 1 ? width / (points.length - 1) : 0
+  const y = (value: number) => height - pad - ((value - min) / range) * (height - pad * 2)
+
+  // A day without a usable close breaks the line instead of drawing straight across the gap.
+  const segments: string[] = []
+  let current: string[] = []
+  points.forEach((point, index) => {
+    if (point.equityCents === null) {
+      if (current.length > 1) {
+        segments.push(current.join(' L'))
+      }
+      current = []
+      return
+    }
+    current.push(`${(index * step).toFixed(1)},${y(point.equityCents).toFixed(1)}`)
+  })
+  if (current.length > 1) {
+    segments.push(current.join(' L'))
+  }
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label={label}>
+      <line x1="0" x2={width} y1={y(initialCents)} y2={y(initialCents)} stroke="#9CA3AF" strokeWidth="1" strokeDasharray="5 4" />
+      { segments.map(d => <path key={d} d={`M${d}`} fill="none" stroke="var(--primary)" strokeWidth="2.2" />) }
+      { points.map((point, index) => point.equityCents === null
+        ? <line key={point.date} x1={index * step} x2={index * step} y1={pad} y2={height - pad} stroke="#D97706" strokeWidth="1" strokeDasharray="2 3" />
+        : null) }
+    </svg>
+  )
+}
+
 const UP = '#EF4444'
 const DOWN = '#10B981'
 

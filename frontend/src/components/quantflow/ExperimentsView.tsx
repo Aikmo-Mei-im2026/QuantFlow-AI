@@ -1,15 +1,59 @@
 'use client'
 
+import type { Experiment } from '@/lib/mock-data'
 import { ArrowUpRight, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocale } from '@/hooks'
 import { labCopy as copy } from '@/i18n/lab'
 import { mockExperiments } from '@/lib/mock-data'
 import { DataStatusLine, DemoBadge, StatusBadge } from './shared'
 
+const TYPE_OPTIONS = ['all', 'screening', 'backtest', 'training'] as const
+const STATUS_OPTIONS = ['all', 'running', 'succeeded', 'failed', 'interrupted'] as const
+const STATUS_LABEL_KEYS = {
+  running: 'quantflow.common.statusRunning',
+  succeeded: 'quantflow.common.statusSucceeded',
+  failed: 'quantflow.common.statusFailed',
+  interrupted: 'quantflow.common.statusInterrupted',
+} as const
+
+function ChipGroup<O extends string>({ label, options, value, counts, onChange, labelOf }: {
+  label: string
+  options: readonly O[]
+  value: O
+  counts: Record<string, number>
+  onChange: (option: O) => void
+  labelOf: (option: O) => string
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs text-muted-foreground">{ label }</span>
+      { options.map(option => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={value === option}
+          className={`rounded-md px-2.5 py-1 text-xs ${value === option ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+          onClick={() => onChange(option)}
+        >
+          { labelOf(option) }
+          <span className="ml-1.5 tabular-nums opacity-70">{ counts[option] ?? 0 }</span>
+        </button>
+      )) }
+    </div>
+  )
+}
+
 export default function ExperimentsView() {
   const { t, currentLocale } = useLocale()
+  const [type, setType] = useState<Experiment['type'] | 'all'>('all')
+  const [status, setStatus] = useState<Experiment['status'] | 'all'>('all')
+  const filtered = type !== 'all' || status !== 'all'
+  const visible = mockExperiments.filter(item => (type === 'all' || item.type === type) && (status === 'all' || item.status === status))
+  const typeCounts = Object.fromEntries(TYPE_OPTIONS.map(option => [option, option === 'all' ? mockExperiments.length : mockExperiments.filter(item => item.type === option).length]))
+  const statusCounts = Object.fromEntries(STATUS_OPTIONS.map(option => [option, option === 'all' ? mockExperiments.length : mockExperiments.filter(item => item.status === option).length]))
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
@@ -29,8 +73,47 @@ export default function ExperimentsView() {
         </div>
       </div>
 
+      <div className="mt-7 space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <ChipGroup
+            label={t('quantflow.experiments.table.type')}
+            options={TYPE_OPTIONS}
+            value={type}
+            counts={typeCounts}
+            onChange={setType}
+            labelOf={option => (option === 'all' ? t('quantflow.experiments.filter.all') : t(`quantflow.experiments.types.${option}`))}
+          />
+          <ChipGroup
+            label={t('quantflow.experiments.table.status')}
+            options={STATUS_OPTIONS}
+            value={status}
+            counts={statusCounts}
+            onChange={setStatus}
+            labelOf={option => (option === 'all' ? t('quantflow.experiments.filter.all') : t(STATUS_LABEL_KEYS[option]))}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          <span>{ t('quantflow.experiments.filter.showing', { total: mockExperiments.length, visible: visible.length }) }</span>
+          { filtered && (
+            <button
+              type="button"
+              className="text-primary underline-offset-4 hover:underline"
+              onClick={() => {
+                setType('all')
+                setStatus('all')
+              }}
+            >
+              { t('quantflow.experiments.filter.reset') }
+            </button>
+          ) }
+        </div>
+      </div>
+
       <div className="mt-5 space-y-3">
-        { mockExperiments.map(exp => (
+        { visible.length === 0 && (
+          <p className="rounded-2xl border border-dashed px-5 py-8 text-center text-sm text-muted-foreground">{ t('quantflow.experiments.filter.empty') }</p>
+        ) }
+        { visible.map(exp => (
           <details key={exp.id} className="group rounded-2xl border bg-card shadow-sm open:border-primary/30">
             <summary className="cursor-pointer rounded-2xl px-5 py-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-6">
               <span className="ml-1 inline-grid w-[calc(100%-1.5rem)] align-middle">

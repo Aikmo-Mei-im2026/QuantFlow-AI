@@ -78,6 +78,7 @@ node scripts/preview-static.mjs
 | /zh/lab          | LabView.tsx                 |
 | /zh/training     | TrainingView.tsx            |
 | /zh/experiments  | ExperimentsView.tsx         |
+| /zh/login        | LoginView.tsx               |
 | /zh/docs         | content/zh/docs/index.mdx   |
 | /zh/docs/factors | content/zh/docs/factors.mdx |
 | /zh/docs/rules   | content/zh/docs/rules.mdx   |

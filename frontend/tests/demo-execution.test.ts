@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 // Node's built-in runner keeps these independent arithmetic checks dependency-free.
 // eslint-disable-next-line test/no-import-node-test
 import test from 'node:test'
-import { advanceDemoDay, createDemoAccount, getDemoCandle, quoteDemoOrder, submitDemoOrder, valueDemoAccount } from '../src/lib/demo-execution.ts'
+import { advanceDemoDay, createDemoAccount, getDemoCandle, quoteDemoOrder, replayDemoEquity, submitDemoOrder, valueDemoAccount } from '../src/lib/demo-execution.ts'
 
 const dates = ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06']
 
@@ -35,7 +35,7 @@ function advance(state: DemoAccount, market: DemoMarket): DemoAccount {
 
 test('initial account is empty and worth exactly 100,000 yuan', () => {
   const account = createDemoAccount()
-  assert.deepEqual(account, { dayIndex: 0, cashCents: 10_000_000, positions: [], orders: [], fills: [] })
+  assert.deepEqual(account, { dayIndex: 0, cashCents: 10_000_000, initialCashCents: 10_000_000, positions: [], orders: [], fills: [] })
   assert.deepEqual(valueDemoAccount(account, fixture()), { holdingsValueCents: 0, equityCents: 10_000_000, error: null })
 })
 
@@ -185,4 +185,75 @@ test('quote rejects non-cent prices and unsafe totals; calendars reject duplicat
   const market = fixture()
   assert.ok(advanceDemoDay(createDemoAccount(), { ...market, dates: ['2026-08-03', '2026-08-03'] }).error)
   assert.ok(advanceDemoDay(createDemoAccount(), { ...market, dates: ['2026-02-30', '2026-03-02'] }).error)
+})
+
+test('replay equity covers only days up to the replay date and starts from the initial cash', () => {
+  const market = fixture()
+  const idle = advance(advance(createDemoAccount(), market), market)
+  assert.deepEqual(replayDemoEquity(idle, market), {
+    points: [
+      { date: '2026-08-03', equityCents: 10_000_000, reason: null },
+      { date: '2026-08-04', equityCents: 10_000_000, reason: null },
+      { date: '2026-08-05', equityCents: 10_000_000, reason: null },
+    ],
+    error: null,
+  })
+  // A replay still parked on the first day must not expose any later bar.
+  assert.deepEqual(replayDemoEquity(createDemoAccount(), market).points, [
+    { date: '2026-08-03', equityCents: 10_000_000, reason: null },
+  ])
+})
+
+test('replay equity books the fill on its execution day and revalues later closes', () => {
+  const market = fixture()
+  const held = advance(order(createDemoAccount(), market), market)
+  // Buy 100 shares of 600036 at 10.01 (5bp on 10.00) with the 5 yuan commission floor.
+  assert.deepEqual(replayDemoEquity(held, market).points.map(point => point.equityCents), [10_000_000, 10_009_400])
+  const twoDaysLater = advance(held, market)
+  assert.deepEqual(replayDemoEquity(twoDaysLater, market).points.map(point => point.equityCents), [10_000_000, 10_009_400, 10_029_400])
+  assert.equal(
+    replayDemoEquity(twoDaysLater, market).points.at(-1)?.equityCents,
+    valueDemoAccount(twoDaysLater, market).equityCents,
+  )
+})
+
+test('replay equity drops the position after the T+1 sell and keeps every cent accounted', () => {
+  const market = fixture()
+  const held = advance(advance(order(createDemoAccount(), market), market), market)
+  // Sell order submitted on 2026-08-05 executes on 2026-08-06 open 14.00 minus 5bp: 13.99, amount 139,900, fee 500.
+  const closed = advance(order(held, market, '600036', 'sell'), market)
+  assert.deepEqual(replayDemoEquity(closed, market).points.map(point => point.equityCents), [10_000_000, 10_009_400, 10_029_400, 10_038_800])
+  assert.deepEqual(replayDemoEquity(closed, market).points.map(point => point.reason), [null, null, null, null])
+  assert.equal(replayDemoEquity(closed, market).points.at(-1)?.equityCents, valueDemoAccount(closed, market).equityCents)
+})
+
+test('replay equity reports a null day instead of borrowing another symbol price', () => {
+  const market = fixture()
+  market.candlesBySymbol['600036'] = market.candlesBySymbol['600036']!.filter(row => row.date !== '2026-08-05')
+  const held = advance(order(advance(order(createDemoAccount(), market), market), market), market)
+  assert.equal(held.dayIndex, 2)
+  const replay = replayDemoEquity(held, market)
+  assert.deepEqual(replay.points.map(point => point.equityCents), [10_000_000, 10_009_400, null])
+  assert.match(String(replay.points[2]?.reason), /600036/)
+})
+
+test('a rejected order leaves the replay curve on cash only', () => {
+  const market = fixture()
+  market.candlesBySymbol['600036'] = [candle('2026-08-03', 10), candle('2026-08-04', 10, 10, 'halted')]
+  const rejected = advance(order(createDemoAccount(), market), market)
+  assert.equal(rejected.fills[0]?.status, 'rejected')
+  assert.deepEqual(replayDemoEquity(rejected, { ...market, dates: ['2026-08-03', '2026-08-04'] }).points.map(point => point.equityCents), [10_000_000, 10_000_000])
+})
+
+test('replay equity refuses an out-of-range replay day', () => {
+  assert.deepEqual(replayDemoEquity(createDemoAccount(9), fixture()), { points: [], error: '回放日期无效' })
+})
+
+test('a profile starting capital survives advancing and moves every baseline', () => {
+  const market = fixture()
+  const held = advance(order(createDemoAccount(0, 50_000_000), market), market)
+  assert.equal(held.initialCashCents, 50_000_000)
+  // Same 100,100 amount plus the 500 cent commission floor as the 100,000 yuan case.
+  assert.equal(held.cashCents, 50_000_000 - 100_100 - 500)
+  assert.deepEqual(replayDemoEquity(held, market).points.map(point => point.equityCents), [50_000_000, 50_009_400])
 })
