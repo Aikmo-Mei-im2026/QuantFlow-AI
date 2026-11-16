@@ -35,7 +35,8 @@ export default {
   },
   login: {
     type: 'page',
-    title: '个人中心',
+    display: 'hidden',
+    title: '进入练习',
     theme: businessLayout,
   },
   docs: {
